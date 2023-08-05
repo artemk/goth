@@ -246,7 +246,7 @@ defmodule GothTest do
       Goth.start_link(
         name: test,
         source: {:service_account, random_service_account_credentials(), url: "http://localhost:#{bypass.port}"},
-        http_client: {:finch, []},
+        http_client: {:hackney, []},
         max_retries: 3
       )
 
@@ -278,7 +278,7 @@ defmodule GothTest do
       Goth.start_link(
         name: test,
         source: {:service_account, random_service_account_credentials(), url: "http://localhost:#{bypass.port}"},
-        http_client: {:finch, []},
+        http_client: {:hackney, []},
         max_retries: 3,
         retry_delay: fun
       )

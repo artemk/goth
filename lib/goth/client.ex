@@ -171,7 +171,7 @@ defmodule Goth.Client do
   end
 
   defp request(method, url, headers, body) do
-    Goth.__finch__(method: method, url: url, headers: headers, body: body)
+    Goth.__hackney__(method: method, url: url, headers: headers, body: body)
   end
 
   defp request!(method, url, headers, body) do

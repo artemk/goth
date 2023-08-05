@@ -56,8 +56,7 @@ defmodule Goth do
       that it is tried to be automatically refreshed. Defaults to
       `#{@refresh_before_minutes * 60}` (#{@refresh_before_minutes} minutes).
 
-    * `:http_client` - a function that makes the HTTP request. Defaults to using built-in
-      integration with [Finch](https://github.com/sneako/finch)
+    * `:http_client` - a function that makes the HTTP request.
 
       See documentation of the `:http_client` option in `Goth.Token.fetch/1` for
       more information.
@@ -101,7 +100,7 @@ defmodule Goth do
     opts =
       opts
       |> Keyword.put_new(:refresh_before, @refresh_before_minutes * 60)
-      |> Keyword.put_new(:http_client, {:finch, []})
+      |> Keyword.put_new(:http_client, {:hackney, []})
       |> Keyword.put_new(:source, {:default, []})
       |> Keyword.put_new(:retry_delay, &exp_backoff/1)
 
@@ -109,15 +108,20 @@ defmodule Goth do
     GenServer.start_link(__MODULE__, opts, name: registry_name(name))
   end
 
-  def __finch__(options) do
+  def __hackney__(options) do
     {method, options} = Keyword.pop!(options, :method)
     {url, options} = Keyword.pop!(options, :url)
     {headers, options} = Keyword.pop!(options, :headers)
     {body, options} = Keyword.pop!(options, :body)
 
-    finch_request = Finch.build(method, url, headers, body)
+    :hackney.request(method, url, headers, body, [:with_body, pool: false])
+    |> case do
+      {:ok, status, headers, body} ->
+        {:ok, %{status: status, headers: headers, body: body}}
 
-    Finch.request(finch_request, Goth.Finch, options)
+      {:error, error} ->
+        {:error, error}
+    end
   end
 
   @doc """
@@ -216,12 +220,12 @@ defmodule Goth do
     end
   end
 
-  defp start_http_client(:finch) do
-    {&__finch__/1, []}
+  defp start_http_client(:hackney) do
+    {&__hackney__/1, []}
   end
 
-  defp start_http_client({:finch, opts}) do
-    {&__finch__/1, opts}
+  defp start_http_client({:hackney, opts}) do
+    {&__hackney__/1, opts}
   end
 
   defp start_http_client(fun) when is_function(fun, 1) do

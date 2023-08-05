@@ -149,7 +149,7 @@ defmodule Goth.TokenTest do
 
     Bypass.down(bypass)
     {:error, error} = Goth.Token.fetch(config)
-    assert error.reason == :econnrefused
+    assert error == :econnrefused
   end
 
   test "fetch/1 with refresh token" do
